@@ -1,0 +1,39 @@
+%matplotlib inline
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import os
+from glob import glob
+import seaborn as sns
+base_skin_dir = os.path.join('..', 'input')
+
+
+
+lesion_type_dict = {
+    'nv': 'Melanocytic nevi',
+    'mel': 'melanoma ',   #this is an error in the other scripts
+    'bkl': 'Benign keratosis-like lesions ',
+    'bcc': 'Basal cell carcinoma',
+    'akiec': 'Actinic keratoses',
+    'vasc': 'Vascular lesions',
+    'df': 'Dermatofibroma'
+}
+
+
+tile_df['path'] = tile_df['image_id'].map(imageid_path_dict.get)
+tile_df['cell_type'] = tile_df['dx'].map(lesion_type_dict.get) 
+tile_df['cell_type_idx'] = pd.Categorical(tile_df['cell_type']).codes
+tile_df.sample(3)
+tile_df.describe(exclude=[np.number])
+
+images=pd.read_csv('../input/hmnist_28_28_RGB.csv')
+
+
+images=images.reset_index()
+images=(images.T.append(tile_df[['dx_type','age','sex','localization']].T)).T
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(images.drop(['label'],axis=1),images['label'], test_size=0.2, random_state=42)
+totaal=(X_train.append(X_test)).fillna(0)
+totaal=totaal.drop('index',axis=1).values
+
+subx=klasseer(totaal,(X_train.T.append(y_train.T)).T,(X_test.T.append(y_test.T)).T,'label','index',0.01,False)
